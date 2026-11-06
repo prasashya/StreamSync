@@ -143,7 +143,7 @@ Cloudflare will generate a public HTTPS link in your terminal:
 
 <!-- SCREENSHOT PLACEHOLDER: WATCH PARTY IN ACTION -->
 <p align="center">
-  <img src="https://via.placeholder.com/900x480/0c0f17/34d399?text=+Attach+Synchronized+Watch+Party+with+Friends+Screenshot+Here+" alt="Watch Party in Action" width="850">
+  <img src="assets/Screenshot 2026-11-07 023002.png">
 </p>
 
 ---
