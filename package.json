@@ -1,13 +1,21 @@
 {
-  "name": "live-video-streaming",
+  "name": "streamsync",
   "version": "1.0.0",
-  "description": "Stream local video files over local network and public Ngrok tunnel with byte-range seeking",
+  "description": "Lightweight self-hosted video streaming & synchronized watch party server with adaptive byte-range scrubbing and real-time WebSocket sync.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "dependencies": {
-    "express": "^4.21.2"
-  }
+  "keywords": [
+    "video-streaming",
+    "watch-party",
+    "self-hosted",
+    "nodejs",
+    "websockets",
+    "byte-range-requests",
+    "cloudflare-tunnels",
+    "subtitles",
+    "media-server"
+  ],
+  "license": "MIT"
 }
-
