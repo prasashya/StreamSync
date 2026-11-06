@@ -7,7 +7,7 @@
 <!-- SCREENSHOT PLACEHOLDER: HERO / PLAYER INTERFACE -->
 <!-- Replace the link below with your actual screenshot after uploading to GitHub -->
 <p align="center">
-  <img src="https://via.placeholder.com/900x500/0c0f17/6366f1?text=+Attach+Main+Web+Player+Screenshot+Here+" alt="StreamSync Player Interface" width="850">
+  <img src="assets/Screenshot 2026-11-07 020906.png">
 </p>
 
 ---
