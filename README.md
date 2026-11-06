@@ -39,7 +39,7 @@
 
 <!-- SCREENSHOT PLACEHOLDER: SUBTITLE & AUDIO CONTROLS -->
 <p align="center">
-  <img src="https://via.placeholder.com/900x260/121826/a5b4fc?text=+Attach+Subtitle+and+Audio+Customization+Bar+Screenshot+Here+" alt="Subtitle & Audio Settings Bar" width="850">
+  <img src="assets/Screenshot 2026-11-07 021255.png" alt="Subtitle & Audio Settings Bar" width="850">
 </p>
 
 ---
