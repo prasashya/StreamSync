@@ -7,7 +7,7 @@
 <!-- SCREENSHOT PLACEHOLDER: HERO / PLAYER INTERFACE -->
 <!-- Replace the link below with your actual screenshot after uploading to GitHub -->
 <p align="center">
-  <img src="assets/Screenshot 2026-11-07 020906.png">
+  <img src="assets/Screenshot 2026-11-07 021145.png">
 </p>
 
 ---
