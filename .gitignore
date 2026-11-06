@@ -1,0 +1,16 @@
+# Dependency directories
+node_modules/
+
+# Ignore large media files (GitHub has a 100MB hard limit)
+videos/*
+!videos/README.txt
+
+# Tunnel executables
+cloudflared.exe
+*.exe
+
+# Logs and system files
+*.log
+.DS_Store
+Thumbs.db
+

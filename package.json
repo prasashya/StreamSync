@@ -1,0 +1,13 @@
+{
+  "name": "live-video-streaming",
+  "version": "1.0.0",
+  "description": "Stream local video files over local network and public Ngrok tunnel with byte-range seeking",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
+

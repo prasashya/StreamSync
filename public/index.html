@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Private Video Stream • Watch Party</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style id="subtitleCustomStyle"></style>
+</head>
+<body>
+  <div class="background-glow"></div>
+
+  <!-- Toast Notification Container for sync alerts -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <main class="container">
+    <header class="header">
+      <div class="header-badges">
+        <!-- Room pill -->
+        <div class="party-pill" id="roomPill" title="Click to change room name">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span id="roomLabel">Room: #watchparty</span>
+        </div>
+
+        <!-- Online peers count -->
+        <div class="peers-pill">
+          <span class="live-dot"></span>
+          <span id="peersCount">1 Watching</span>
+        </div>
+
+        <!-- Copy invite link button -->
+        <button id="btnCopyInvite" class="btn-invite" title="Copy watch party invite link to share">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="btnCopyText">Copy Invite Link</span>
+        </button>
+
+        <!-- User profile button -->
+        <button id="btnChangeName" class="btn-profile" title="Change your display name">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span id="userNameDisplay">Me</span>
+        </button>
+      </div>
+
+      <h1 class="title">Private Video Stream</h1>
+      <p class="subtitle">Synchronized Watch Party • Adaptive Streaming with Subtitles</p>
+    </header>
+
+    <div class="player-card">
+      <div class="video-wrapper">
+        <video id="videoPlayer" controls playsinline preload="metadata">
+          <source src="/video" type="video/mp4">
+          <source src="/video" type="video/webm">
+          <source src="/video" type="video/x-matroska">
+          Your browser does not support the video tag.
+        </video>
+
+        <!-- Floating reaction animation area -->
+        <div id="reactionOverlay" class="reaction-overlay"></div>
+
+        <!-- Overlay when no video found -->
+        <div id="noVideoOverlay" class="no-video-overlay hidden">
+          <div class="overlay-icon">📁</div>
+          <h3>No Video File Found</h3>
+          <p>Drop an <code>.mp4</code>, <code>.mkv</code>, or <code>.webm</code> file into the <code>videos/</code> folder and refresh.</p>
+        </div>
+      </div>
+
+      <!-- Live Reaction & Quick Chat Bar -->
+      <div class="party-interact-bar">
+        <div class="reaction-buttons">
+          <span class="interact-label">REACTIONS</span>
+          <button class="btn-emoji" data-emoji="😂" title="Laugh">😂</button>
+          <button class="btn-emoji" data-emoji="❤️" title="Love">❤️</button>
+          <button class="btn-emoji" data-emoji="😱" title="Shock">😱</button>
+          <button class="btn-emoji" data-emoji="🍿" title="Popcorn">🍿</button>
+          <button class="btn-emoji" data-emoji="⏸️ Wait!" title="Tell friends to pause">⏸️ Wait!</button>
+        </div>
+
+        <form id="chatForm" class="chat-form">
+          <input type="text" id="chatInput" placeholder="Send a quick message to everyone..." maxlength="120" autocomplete="off">
+          <button type="submit" class="btn-chat-send">Send</button>
+        </form>
+      </div>
+
+      <!-- Controls Panel for Subtitles & Audio Tracks -->
+      <div class="media-settings-bar">
+        <!-- Row 1: Source & Track Selection -->
+        <div class="settings-row track-row">
+          <!-- Subtitle selection -->
+          <div class="setting-group flex-1">
+            <label class="setting-label">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 10h4m-4 4h8m4 0h-2"/></svg>
+              SUBTITLES
+            </label>
+            <div class="setting-controls">
+              <select id="subtitleSelect" class="styled-select">
+                <option value="off">Subtitles: Off</option>
+              </select>
+              <label class="btn-secondary" title="Load .srt or .vtt file from your computer">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload .SRT / .VTT
+                <input type="file" id="subFileInput" accept=".srt,.vtt" style="display:none">
+              </label>
+            </div>
+          </div>
+
+          <!-- Audio language selection -->
+          <div class="setting-group flex-1">
+            <label class="setting-label">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              AUDIO LANGUAGE
+            </label>
+            <div class="setting-controls">
+              <select id="audioSelect" class="styled-select">
+                <option value="default">Default Video Audio</option>
+              </select>
+              <label class="btn-secondary" title="Load an external audio file (e.g. alternate language dub)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                Add Audio Track
+                <input type="file" id="audioFileInput" accept="audio/*,.mp3,.aac,.m4a,.wav,.ogg" style="display:none">
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: Subtitle Customizations & Sync -->
+        <div class="settings-row custom-row">
+          <!-- Text Size Adjuster -->
+          <div class="custom-item">
+            <span class="custom-title">TEXT SIZE</span>
+            <div class="size-controls">
+              <button id="btnSizeDec" class="btn-step" title="Decrease subtitle text size">A−</button>
+              <span id="txtSizeDisplay" class="size-val">100%</span>
+              <button id="btnSizeInc" class="btn-step" title="Increase subtitle text size">A+</button>
+            </div>
+          </div>
+
+          <!-- Color Customizer -->
+          <div class="custom-item">
+            <span class="custom-title">COLOR</span>
+            <select id="subColorSelect" class="styled-select compact">
+              <option value="#ffffff">White</option>
+              <option value="#facc15">Yellow (Netflix)</option>
+              <option value="#67e8f9">Cyan</option>
+              <option value="#86efac">Light Green</option>
+            </select>
+          </div>
+
+          <!-- Background / Box Style -->
+          <div class="custom-item">
+            <span class="custom-title">BACKGROUND</span>
+            <select id="subBgSelect" class="styled-select compact">
+              <option value="dark">Translucent Box</option>
+              <option value="solid">Solid Black Box</option>
+              <option value="none">Shadow Only (No Box)</option>
+            </select>
+          </div>
+
+          <!-- Subtitle Sync -->
+          <div class="custom-item sync-box">
+            <span class="custom-title">SUBTITLE SYNC</span>
+            <div class="sync-controls">
+              <button id="subDelayMinus" class="btn-step" title="Show subtitles 0.5s earlier">−0.5s</button>
+              <span id="subDelayDisplay" class="sync-val">0.0s</span>
+              <button id="subDelayPlus" class="btn-step" title="Delay subtitles 0.5s">+0.5s</button>
+              <button id="subDelayReset" class="btn-reset" title="Reset sync to 0.0s">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Meta Bar -->
+      <div class="meta-bar">
+        <div class="meta-item">
+          <span class="meta-label">CURRENT FILE</span>
+          <span id="fileName" class="meta-value">Checking...</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">FILE SIZE</span>
+          <span id="fileSize" class="meta-value">--</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">FORMAT</span>
+          <span id="fileFormat" class="meta-badge">MP4</span>
+        </div>
+        <div class="meta-item status-pill">
+          <span class="status-indicator"></span>
+          <span id="streamStatus">Connecting</span>
+        </div>
+      </div>
+    </div>
+
+    <audio id="externalAudio" preload="auto" style="display:none"></audio>
+
+    <!-- Keyboard Shortcuts -->
+    <section class="shortcuts-card">
+      <div class="shortcut"><kbd>Space</kbd> <span>Play / Pause (Syncs All)</span></div>
+      <div class="shortcut"><kbd>←</kbd> <kbd>→</kbd> <span>Seek (Syncs All)</span></div>
+      <div class="shortcut"><kbd>↑</kbd> <kbd>↓</kbd> <span>Volume</span></div>
+      <div class="shortcut"><kbd>C</kbd> <span>Toggle Captions</span></div>
+      <div class="shortcut"><kbd>M</kbd> <span>Mute</span></div>
+      <div class="shortcut"><kbd>F</kbd> <span>Full Screen</span></div>
+    </section>
+
+    <footer class="footer">
+      <span>Self-hosted Private Video Stream • Synchronized WebSocket Watch Party</span>
+    </footer>
+  </main>
+
+  <script>
+    const video = document.getElementById('videoPlayer');
+    const externalAudio = document.getElementById('externalAudio');
+    const fileNameEl = document.getElementById('fileName');
+    const fileSizeEl = document.getElementById('fileSize');
+    const fileFormatEl = document.getElementById('fileFormat');
+    const streamStatusEl = document.getElementById('streamStatus');
+    const noVideoOverlay = document.getElementById('noVideoOverlay');
+    const subtitleSelect = document.getElementById('subtitleSelect');
+    const subFileInput = document.getElementById('subFileInput');
+    const audioSelect = document.getElementById('audioSelect');
+    const audioFileInput = document.getElementById('audioFileInput');
+    
+    // Customization elements
+    const btnSizeDec = document.getElementById('btnSizeDec');
+    const btnSizeInc = document.getElementById('btnSizeInc');
+    const txtSizeDisplay = document.getElementById('txtSizeDisplay');
+    const subColorSelect = document.getElementById('subColorSelect');
+    const subBgSelect = document.getElementById('subBgSelect');
+    const subDelayMinus = document.getElementById('subDelayMinus');
+    const subDelayPlus = document.getElementById('subDelayPlus');
+    const subDelayReset = document.getElementById('subDelayReset');
+    const subDelayDisplay = document.getElementById('subDelayDisplay');
+    const subtitleCustomStyle = document.getElementById('subtitleCustomStyle');
+
+    // Watch party elements
+    const roomPill = document.getElementById('roomPill');
+    const roomLabel = document.getElementById('roomLabel');
+    const peersCount = document.getElementById('peersCount');
+    const btnCopyInvite = document.getElementById('btnCopyInvite');
+    const btnCopyText = document.getElementById('btnCopyText');
+    const btnChangeName = document.getElementById('btnChangeName');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    const toastContainer = document.getElementById('toastContainer');
+    const reactionOverlay = document.getElementById('reactionOverlay');
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+
+    let subtitleOffset = 0.0;
+    let customTracks = [];
+    let isExternalAudioActive = false;
+
+    // -----------------------------------------------------------
+    // Room & User Identity Setup
+    // -----------------------------------------------------------
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentRoom = urlParams.get('room') || 'watchparty';
+    let currentUserName = localStorage.getItem('user_name') || 'Guest ' + Math.floor(100 + Math.random() * 900);
+    
+    roomLabel.textContent = `Room: #${currentRoom}`;
+    userNameDisplay.textContent = currentUserName;
+
+    // Click room pill to change or create new room
+    roomPill.addEventListener('click', () => {
+      const newRoom = prompt('Enter a room name to join or create:', currentRoom);
+      if (newRoom && newRoom.trim() && newRoom.trim() !== currentRoom) {
+        urlParams.set('room', newRoom.trim());
+        window.location.search = urlParams.toString();
+      }
+    });
+
+    // Change display name
+    btnChangeName.addEventListener('click', () => {
+      const newName = prompt('Enter your name for the watch party:', currentUserName);
+      if (newName && newName.trim()) {
+        currentUserName = newName.trim();
+        localStorage.setItem('user_name', currentUserName);
+        userNameDisplay.textContent = currentUserName;
+        showToast('👤 Name updated to ' + currentUserName);
+      }
+    });
+
+    // Copy invite link button
+    btnCopyInvite.addEventListener('click', () => {
+      const inviteUrl = new URL(window.location.href);
+      inviteUrl.searchParams.set('room', currentRoom);
+      navigator.clipboard.writeText(inviteUrl.toString()).then(() => {
+        btnCopyText.textContent = 'Link Copied!';
+        btnCopyInvite.classList.add('copied');
+        showToast('📋 Invite link copied to clipboard! Share it with your friend.');
+        setTimeout(() => {
+          btnCopyText.textContent = 'Copy Invite Link';
+          btnCopyInvite.classList.remove('copied');
+        }, 2500);
+      }).catch(() => {
+        prompt('Copy this link to invite someone:', inviteUrl.toString());
+      });
+    });
+
+    // Floating Toast Notification
+    function showToast(message, duration = 3000) {
+      const toast = document.createElement('div');
+      toast.className = 'toast-alert';
+      toast.innerHTML = message;
+      toastContainer.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 400);
+      }, duration);
+    }
+
+    // Format seconds to mm:ss
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // -----------------------------------------------------------
+    // Resilient Real-Time WebSocket Synchronization Engine
+    // -----------------------------------------------------------
+    let socket = null;
+    let isRemoteSync = false;       // Flag to prevent feedback echo loops
+    let isBuffering = false;        // Track browser buffer state
+    let isUserInitiated = false;    // Distinguish genuine user clicks from browser buffer pauses
+    let lastSeekSent = 0;
+    let catchupInterval = null;
+
+    // Track user clicks and keys to know genuine user pauses
+    ['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
+      window.addEventListener(evt, () => {
+        isUserInitiated = true;
+        setTimeout(() => { isUserInitiated = false; }, 800);
+      }, { passive: true });
+    });
+
+    video.addEventListener('waiting', () => {
+      isBuffering = true;
+      streamStatusEl.textContent = 'Buffering...';
+    });
+
+    video.addEventListener('playing', () => {
+      isBuffering = false;
+      streamStatusEl.textContent = 'Streaming';
+      streamStatusEl.parentElement.classList.add('playing');
+    });
+
+    video.addEventListener('canplay', () => {
+      isBuffering = false;
+    });
+
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws?room=${encodeURIComponent(currentRoom)}&user=${encodeURIComponent(currentUserName)}`;
+
+      socket = new WebSocket(wsUrl);
+
+      socket.onopen = () => {
+        console.log('Connected to Watch Party room:', currentRoom);
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleSocketMessage(data);
+        } catch (e) {
+          console.error('Invalid WS payload:', e);
+        }
+      };
+
+      socket.onclose = () => {
+        console.log('WS disconnected, reconnecting in 2s...');
+        setTimeout(connectWebSocket, 2000);
+      };
+    }
+
+    function sendSocketAction(action, time = video.currentTime, extra = {}) {
+      if (socket && socket.readyState === WebSocket.OPEN && !isRemoteSync) {
+        socket.send(JSON.stringify({
+          action: action,
+          time: time,
+          user: currentUserName,
+          ...extra
+        }));
+      }
+    }
+
+    // Smooth drift correction using dynamic playbackRate (prevents buffer-dump stutter)
+    function applySmoothCatchup(targetTime) {
+      const diff = targetTime - video.currentTime; // positive: we are behind; negative: we are ahead
+
+      if (Math.abs(diff) > 3.5) {
+        // Massive gap (e.g. peer jumped to a different scene) -> hard seek
+        video.currentTime = targetTime;
+        video.playbackRate = 1.0;
+        return;
+      }
+
+      if (Math.abs(diff) <= 0.25) {
+        // In perfect sync -> standard speed
+        video.playbackRate = 1.0;
+        return;
+      }
+
+      // Micro-adjust speed to seamlessly slide back into sync without pausing/freezing
+      if (diff > 0.25) {
+        video.playbackRate = 1.06; // 6% faster to catch up seamlessly
+      } else {
+        video.playbackRate = 0.94; // 6% slower to let peer catch up
+      }
+
+      // Check every 300ms until within tight threshold, then restore 1.0x
+      if (catchupInterval) clearInterval(catchupInterval);
+      catchupInterval = setInterval(() => {
+        const curDiff = Math.abs(targetTime - video.currentTime);
+        if (curDiff < 0.20 || video.paused) {
+          video.playbackRate = 1.0;
+          clearInterval(catchupInterval);
+          catchupInterval = null;
+        }
+      }, 300);
+    }
+
+    function handleSocketMessage(msg) {
+      if (msg.type === 'init') {
+        peersCount.textContent = `${msg.userCount} Watching`;
+        if (msg.state && msg.state.lastTime > 0) {
+          isRemoteSync = true;
+          video.currentTime = msg.state.lastTime;
+          if (msg.state.isPlaying) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+          setTimeout(() => { isRemoteSync = false; }, 500);
+        }
+      }
+
+      if (msg.type === 'user_joined') {
+        peersCount.textContent = `${msg.userCount} Watching`;
+        showToast(`👋 <strong>${msg.user}</strong> joined the watch party!`);
+      }
+
+      if (msg.type === 'user_left') {
+        peersCount.textContent = `${msg.userCount} Watching`;
+        showToast(`🚪 <strong>${msg.user}</strong> left the room.`);
+      }
+
+      if (msg.type === 'sync') {
+        isRemoteSync = true;
+        const timeDiff = Math.abs(video.currentTime - msg.time);
+
+        if (msg.action === 'play') {
+          if (timeDiff > 0.5) {
+            applySmoothCatchup(msg.time);
+          }
+          video.play().catch(() => {});
+          showToast(`▶️ <strong>${msg.user}</strong> started playback`);
+        } else if (msg.action === 'pause') {
+          // Genuine pause from peer
+          video.pause();
+          video.playbackRate = 1.0;
+          if (timeDiff > 0.4) video.currentTime = msg.time;
+          showToast(`⏸️ <strong>${msg.user}</strong> paused the video at ${formatTime(msg.time)}`);
+        } else if (msg.action === 'seek') {
+          video.currentTime = msg.time;
+          video.playbackRate = 1.0;
+          showToast(`⏩ <strong>${msg.user}</strong> jumped to ${formatTime(msg.time)}`);
+        } else if (msg.action === 'sync') {
+          // Subtle background heartbeat: adjust playback rate without causing any stutter
+          if (!video.paused && !isBuffering) {
+            applySmoothCatchup(msg.time);
+          }
+        }
+
+        setTimeout(() => {
+          isRemoteSync = false;
+        }, 450);
+      }
+
+      if (msg.type === 'chat') {
+        showChatBubble(msg.user, msg.text);
+      }
+    }
+
+    // Video Event Listeners for Sync
+    video.addEventListener('play', () => {
+      // Do not broadcast if caused by buffer recovery or remote sync
+      if (!isRemoteSync && !isBuffering) {
+        sendSocketAction('play', video.currentTime);
+      }
+      if (isExternalAudioActive) {
+        externalAudio.currentTime = video.currentTime;
+        externalAudio.play();
+      }
+      streamStatusEl.textContent = 'Streaming';
+      streamStatusEl.parentElement.classList.add('playing');
+    });
+
+    video.addEventListener('pause', () => {
+      // CRITICAL: Do NOT send pause if the pause was triggered by buffer underrun!
+      // Only broadcast genuine user-initiated pauses.
+      if (!isRemoteSync && !isBuffering && (video.readyState >= 3 || isUserInitiated)) {
+        sendSocketAction('pause', video.currentTime);
+      }
+      if (isExternalAudioActive) externalAudio.pause();
+      streamStatusEl.textContent = 'Paused';
+      streamStatusEl.parentElement.classList.remove('playing');
+    });
+
+    video.addEventListener('seeked', () => {
+      const now = Date.now();
+      // Only broadcast intentional user seeking, throttled to 250ms
+      if (!isRemoteSync && isUserInitiated && (now - lastSeekSent > 250)) {
+        lastSeekSent = now;
+        sendSocketAction('seek', video.currentTime);
+      }
+      if (isExternalAudioActive) {
+        externalAudio.currentTime = video.currentTime;
+      }
+    });
+
+    // Heartbeat sync every 4 seconds (only sent when actively playing and healthy)
+    setInterval(() => {
+      if (!video.paused && !isBuffering && !isRemoteSync) {
+        sendSocketAction('sync', video.currentTime);
+      }
+    }, 4000);
+
+    // -----------------------------------------------------------
+    // Emoji Reactions & Chat
+    // -----------------------------------------------------------
+    document.querySelectorAll('.btn-emoji').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const emoji = btn.dataset.emoji;
+        sendSocketAction('chat', video.currentTime, { text: emoji });
+        showChatBubble(currentUserName, emoji);
+      });
+    });
+
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      sendSocketAction('chat', video.currentTime, { text: text });
+      showChatBubble(currentUserName, text);
+      chatInput.value = '';
+    });
+
+    function showChatBubble(user, text) {
+      const bubble = document.createElement('div');
+      bubble.className = 'floating-chat-bubble';
+      bubble.innerHTML = `<strong>${user}:</strong> ${text}`;
+      
+      // Random horizontal offset within middle bounds
+      const randomLeft = 10 + Math.random() * 50;
+      bubble.style.left = `${randomLeft}%`;
+
+      reactionOverlay.appendChild(bubble);
+
+      setTimeout(() => {
+        bubble.remove();
+      }, 3800);
+    }
+
+    // -----------------------------------------------------------
+    // Subtitle Customizations & Logic
+    // -----------------------------------------------------------
+    const SUBTITLE_PREFS = {
+      sizePercent: parseInt(localStorage.getItem('sub_size') || '100', 10),
+      color: localStorage.getItem('sub_color') || '#ffffff',
+      bgStyle: localStorage.getItem('sub_bg') || 'dark'
+    };
+
+    function applySubtitleStyles() {
+      const basePx = 22;
+      const computedPx = Math.round((basePx * SUBTITLE_PREFS.sizePercent) / 100);
+      txtSizeDisplay.textContent = `${SUBTITLE_PREFS.sizePercent}%`;
+      subColorSelect.value = SUBTITLE_PREFS.color;
+      subBgSelect.value = SUBTITLE_PREFS.bgStyle;
+
+      let bgValue = 'rgba(0, 0, 0, 0.78)';
+      let shadowValue = '0 2px 4px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.8)';
+
+      if (SUBTITLE_PREFS.bgStyle === 'solid') {
+        bgValue = '#000000';
+      } else if (SUBTITLE_PREFS.bgStyle === 'none') {
+        bgValue = 'transparent';
+        shadowValue = '0 0 4px #000, 0 0 8px #000, 0 2px 4px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000';
+      }
+
+      subtitleCustomStyle.textContent = `
+        video::cue {
+          font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+          font-size: ${computedPx}px !important;
+          line-height: 1.35 !important;
+          font-weight: 600 !important;
+          color: ${SUBTITLE_PREFS.color} !important;
+          background-color: ${bgValue} !important;
+          text-shadow: ${shadowValue} !important;
+          border-radius: 4px !important;
+          padding: 0.25rem 0.6rem !important;
+        }
+      `;
+    }
+
+    btnSizeDec.addEventListener('click', () => {
+      if (SUBTITLE_PREFS.sizePercent > 60) {
+        SUBTITLE_PREFS.sizePercent -= 15;
+        localStorage.setItem('sub_size', SUBTITLE_PREFS.sizePercent);
+        applySubtitleStyles();
+      }
+    });
+
+    btnSizeInc.addEventListener('click', () => {
+      if (SUBTITLE_PREFS.sizePercent < 250) {
+        SUBTITLE_PREFS.sizePercent += 15;
+        localStorage.setItem('sub_size', SUBTITLE_PREFS.sizePercent);
+        applySubtitleStyles();
+      }
+    });
+
+    subColorSelect.addEventListener('change', () => {
+      SUBTITLE_PREFS.color = subColorSelect.value;
+      localStorage.setItem('sub_color', SUBTITLE_PREFS.color);
+      applySubtitleStyles();
+    });
+
+    subBgSelect.addEventListener('change', () => {
+      SUBTITLE_PREFS.bgStyle = subBgSelect.value;
+      localStorage.setItem('sub_bg', SUBTITLE_PREFS.bgStyle);
+      applySubtitleStyles();
+    });
+
+    function updateSubtitleDelay(delta) {
+      subtitleOffset += delta;
+      renderSyncDisplay();
+
+      for (let i = 0; i < video.textTracks.length; i++) {
+        const textTrack = video.textTracks[i];
+        if (textTrack.cues) {
+          for (let j = 0; j < textTrack.cues.length; j++) {
+            const cue = textTrack.cues[j];
+            cue.startTime += delta;
+            cue.endTime += delta;
+          }
+        }
+      }
+    }
+
+    function resetSubtitleDelay() {
+      const delta = -subtitleOffset;
+      updateSubtitleDelay(delta);
+      subtitleOffset = 0.0;
+      renderSyncDisplay();
+    }
+
+    function renderSyncDisplay() {
+      subDelayDisplay.textContent = (subtitleOffset > 0 ? '+' : '') + subtitleOffset.toFixed(1) + 's';
+    }
+
+    subDelayMinus.addEventListener('click', () => updateSubtitleDelay(-0.5));
+    subDelayPlus.addEventListener('click', () => updateSubtitleDelay(0.5));
+    subDelayReset.addEventListener('click', resetSubtitleDelay);
+
+    function convertSrtToVtt(srtText) {
+      let vtt = srtText.replace(/\r\n|\r/g, '\n');
+      vtt = vtt.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
+      return 'WEBVTT\n\n' + vtt.trim() + '\n';
+    }
+
+    function addSubtitleTrack(label, vttUrl, isDefault = false) {
+      const track = document.createElement('track');
+      track.kind = 'subtitles';
+      track.label = label;
+      track.srclang = 'en';
+      track.src = vttUrl;
+      if (isDefault) track.default = true;
+      video.appendChild(track);
+      return track;
+    }
+
+    async function loadVideoInfo() {
+      try {
+        const res = await fetch('/api/video-info');
+        if (res.ok) {
+          const data = await res.json();
+          fileNameEl.textContent = data.fileName;
+          fileSizeEl.textContent = `${data.sizeMB} MB`;
+          fileFormatEl.textContent = data.format;
+          streamStatusEl.textContent = 'Ready';
+          streamStatusEl.parentElement.classList.add('ready');
+          noVideoOverlay.classList.add('hidden');
+
+          if (data.subtitles && data.subtitles.length > 0) {
+            data.subtitles.forEach((sub, idx) => {
+              const opt = document.createElement('option');
+              opt.value = `/subtitles/${encodeURIComponent(sub.name)}`;
+              opt.textContent = `Server: ${sub.label}`;
+              subtitleSelect.appendChild(opt);
+
+              const track = addSubtitleTrack(sub.label, opt.value, idx === 0);
+              customTracks.push(track);
+            });
+
+            enableTrackByIndex(0);
+            subtitleSelect.value = `/subtitles/${encodeURIComponent(data.subtitles[0].name)}`;
+          }
+        } else {
+          showNoVideo();
+        }
+      } catch (err) {
+        showNoVideo();
+      }
+    }
+
+    function showNoVideo() {
+      fileNameEl.textContent = 'No file detected';
+      fileSizeEl.textContent = '--';
+      fileFormatEl.textContent = 'NONE';
+      streamStatusEl.textContent = 'Waiting for file';
+      streamStatusEl.parentElement.classList.remove('ready');
+      noVideoOverlay.classList.remove('hidden');
+    }
+
+    function enableTrackByIndex(targetIdx) {
+      for (let i = 0; i < video.textTracks.length; i++) {
+        video.textTracks[i].mode = (i === targetIdx) ? 'showing' : 'disabled';
+      }
+    }
+
+    function disableAllSubtitles() {
+      for (let i = 0; i < video.textTracks.length; i++) {
+        video.textTracks[i].mode = 'disabled';
+      }
+    }
+
+    subtitleSelect.addEventListener('change', () => {
+      const val = subtitleSelect.value;
+      if (val === 'off') {
+        disableAllSubtitles();
+      } else {
+        const selectedText = subtitleSelect.options[subtitleSelect.selectedIndex].text.replace('Server: ', '').replace('Uploaded: ', '');
+        for (let i = 0; i < video.textTracks.length; i++) {
+          if (video.textTracks[i].label === selectedText) {
+            video.textTracks[i].mode = 'showing';
+          } else {
+            video.textTracks[i].mode = 'disabled';
+          }
+        }
+      }
+    });
+
+    subFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        let content = event.target.result;
+        if (file.name.toLowerCase().endsWith('.srt')) {
+          content = convertSrtToVtt(content);
+        }
+
+        const blob = new Blob([content], { type: 'text/vtt' });
+        const blobUrl = URL.createObjectURL(blob);
+        const label = file.name.replace(/\.[^/.]+$/, '');
+
+        const track = addSubtitleTrack(label, blobUrl, true);
+        customTracks.push(track);
+
+        const opt = document.createElement('option');
+        opt.value = blobUrl;
+        opt.textContent = `Uploaded: ${label}`;
+        subtitleSelect.appendChild(opt);
+        subtitleSelect.value = blobUrl;
+
+        setTimeout(() => {
+          disableAllSubtitles();
+          track.mode = 'showing';
+        }, 100);
+      };
+
+      reader.readAsText(file);
+    });
+
+    // Native audio tracks
+    function checkNativeAudioTracks() {
+      if (video.audioTracks && video.audioTracks.length > 1) {
+        audioSelect.innerHTML = '';
+        for (let i = 0; i < video.audioTracks.length; i++) {
+          const track = video.audioTracks[i];
+          const opt = document.createElement('option');
+          opt.value = `native_${i}`;
+          opt.textContent = track.label || track.language || `Audio Track ${i + 1}`;
+          if (track.enabled) opt.selected = true;
+          audioSelect.appendChild(opt);
+        }
+      }
+    }
+
+    video.addEventListener('loadedmetadata', checkNativeAudioTracks);
+
+    audioSelect.addEventListener('change', () => {
+      const val = audioSelect.value;
+      if (val.startsWith('native_')) {
+        const idx = parseInt(val.replace('native_', ''), 10);
+        for (let i = 0; i < video.audioTracks.length; i++) {
+          video.audioTracks[i].enabled = (i === idx);
+        }
+        if (isExternalAudioActive) {
+          externalAudio.pause();
+          isExternalAudioActive = false;
+        }
+      } else if (val === 'default') {
+        video.muted = false;
+        if (isExternalAudioActive) {
+          externalAudio.pause();
+          isExternalAudioActive = false;
+        }
+      } else if (val === 'external') {
+        video.muted = true;
+        isExternalAudioActive = true;
+        externalAudio.currentTime = video.currentTime;
+        if (!video.paused) externalAudio.play();
+      }
+    });
+
+    audioFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const fileUrl = URL.createObjectURL(file);
+      externalAudio.src = fileUrl;
+      isExternalAudioActive = true;
+      video.muted = true;
+
+      let extOpt = audioSelect.querySelector('option[value="external"]');
+      if (!extOpt) {
+        extOpt = document.createElement('option');
+        extOpt.value = 'external';
+        audioSelect.appendChild(extOpt);
+      }
+      extOpt.textContent = `External: ${file.name}`;
+      audioSelect.value = 'external';
+
+      externalAudio.currentTime = video.currentTime;
+      if (!video.paused) externalAudio.play();
+    });
+
+    video.addEventListener('volumechange', () => {
+      if (isExternalAudioActive) {
+        externalAudio.volume = video.volume;
+        externalAudio.muted = video.muted;
+      }
+    });
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      switch (e.code) {
+        case 'Space':
+          e.preventDefault();
+          video.paused ? video.play() : video.pause();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          video.currentTime = Math.max(0, video.currentTime - 5);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          video.currentTime = Math.min(video.duration || 0, video.currentTime + 5);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          video.volume = Math.min(1, video.volume + 0.1);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          video.volume = Math.max(0, video.volume - 0.1);
+          break;
+        case 'KeyC':
+          if (subtitleSelect.options.length > 1) {
+            const nextIdx = (subtitleSelect.selectedIndex + 1) % subtitleSelect.options.length;
+            subtitleSelect.selectedIndex = nextIdx;
+            subtitleSelect.dispatchEvent(new Event('change'));
+          }
+          break;
+        case 'KeyM':
+          video.muted = !video.muted;
+          break;
+        case 'KeyF':
+          if (!document.fullscreenElement) {
+            video.requestFullscreen().catch(() => {});
+          } else {
+            document.exitFullscreen().catch(() => {});
+          }
+          break;
+      }
+    });
+
+    applySubtitleStyles();
+    loadVideoInfo();
+    connectWebSocket();
+  </script>
+</body>
+</html>
